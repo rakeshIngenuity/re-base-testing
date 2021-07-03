@@ -1,0 +1,73 @@
+protected pollJackpotTicker(evt: any){
+
+        const isLocalhost = window.location.href.startsWith("http://localhost");
+        const jackpotUrl = isLocalhost ? "http://localhost:9176/jackpots" // localhost
+            : `${window.location.origin}/services/jackpot-reader/jackpots`;
+
+        const params: any = this.getjackpotParams();
+        ingenuity.game.JackpotRescponseRescieved = false;
+        this.iframeObj.callJackpotApi(jackpotUrl, params,
+            (response: any) => {
+              if (response.results){
+                  ingenuity.game.JackpotRescponseRescieved = true;
+                  ingenuity.dispatcher.fireEvent(ingenuity.platform.vgw.EventConstants.JACKPOT_VALUE_UPDATED, response);
+                  ingenuity.dispatcher.fireEvent("JackPotPoolValueRecieved", response);
+              }
+
+            }, (response: string) => {
+                console.error("Error:", response);
+                this.iframeObj.showServerCannotBeReached();
+            });
+      }
+	  
+	  
+	  
+	  
+	  
+	  ReelPanelController.prototype.onSpinReel = function (evt) {
+                    this.reelView.fireEvent(slot.slotConstants.SlotEventConstants.SPIN);
+                    
+                    ingenuity.utils.delayedCall(slot.slotConstants.SlotConstants.TimerSendBetWithDelay, 10, function () {
+                        ingenuity.game.BetPlaced = false;
+                        ingenuity.game.SpinClicked = true;
+                        if(ingenuity.game.JackpotRescponseRescieved){
+                            ingenuity.dispatcher.fireEvent(ingenuity.platform.EventConstants.PLACE_BET);
+                            ingenuity.game.SpinClicked = false;
+                            ingenuity.game.BetPlaced = true;
+                        } else {
+                            utils.delayedCall("callPlaceBet", 100 , ()=> {
+                                utils.killDelayedCall("callPlaceBet");
+                                this.callPlaceBet();
+                            }, this)
+                        }
+                        
+                    }, this);
+                    
+                };
+
+                ReelPanelController.prototype.callPlaceBet = function () {
+                    utils.killDelayedCall("callPlaceBet");
+                    if(ingenuity.game.JackpotRescponseRescieved){
+                        ingenuity.dispatcher.fireEvent(ingenuity.platform.EventConstants.PLACE_BET);
+                        ingenuity.game.SpinClicked = false;
+                        ingenuity.game.BetPlaced = true;
+                    } else {
+                        utils.delayedCall("callPlaceBet", 100 , ()=> {
+                            utils.killDelayedCall("callPlaceBet");
+                            this.callPlaceBet();
+                        }, this)
+                        
+                    }
+                }
+				
+				
+				
+				protected GetJackPotPoolValue(): void{
+            
+            ingenuity.dispatcher.fireEvent("JACKPOT_POLL");
+          }
+		  
+		  
+		  
+		  
+		  ServerComm.prototype.sendBetRequest
